@@ -1,4 +1,3 @@
-import tempfile
 from aiogram import types
 from aiogram.fsm.context import FSMContext
 from utils.states import States
@@ -13,7 +12,8 @@ async def start(user_id: int, state: FSMContext):
         "<b>/workset</b> — добавить рабочий подход\n"
         "<b>/record</b> — добавить рекорд\n"
         "<b>/weight_stats</b> — посмотреть статистику по весу тела\n"
-        "<b>/workset_stats</b> — посмотреть статистику по рабочим подходам\n"
+        "<b>/workset_stats</b> — посмотреть статистику по рабочим подходам\n\n"
+        "<i>1RM (One-Rep Max) — это максимальный вес, который человек может поднять <b>только один раз</b> в конкретном упражнении при правильной технике</i>"
     )
     btns = types.InlineKeyboardMarkup(
         inline_keyboard=[

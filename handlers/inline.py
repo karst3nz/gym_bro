@@ -1,4 +1,3 @@
-from re import T
 import aiogram
 from config import *
 from utils.log import create_logger

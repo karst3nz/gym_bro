@@ -1,13 +1,8 @@
-import re
 import statistics
 from io import BytesIO
 import matplotlib.pyplot as plt
 from aiogram.types import FSInputFile, InlineKeyboardMarkup, InlineKeyboardButton, InputFile
-import os
-import tempfile
 import datetime
-
-from numpy.__config__ import show
 from database.db import DB
 from utils.weight_stats import estimate_1rm, moving_average
 

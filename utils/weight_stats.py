@@ -1,10 +1,7 @@
-import re
 import statistics
 from io import BytesIO
 import matplotlib.pyplot as plt
 from aiogram.types import FSInputFile, InlineKeyboardMarkup, InlineKeyboardButton, InputFile
-import os
-import tempfile
 import datetime
 from database.db import DB
 

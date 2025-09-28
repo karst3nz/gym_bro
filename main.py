@@ -1,5 +1,3 @@
-import sys
-from threading import Thread
 from config import *
 from database.db import DB
 from handlers import msg, inline, cmd

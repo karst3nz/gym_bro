@@ -1,8 +1,6 @@
 from datetime import datetime, timedelta
 import os
 import tempfile
-
-from numpy import average
 from config import *
 from database.db import DB
 from aiogram import types
