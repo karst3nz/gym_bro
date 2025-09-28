@@ -6,6 +6,8 @@ from aiogram.types import FSInputFile, InlineKeyboardMarkup, InlineKeyboardButto
 import os
 import tempfile
 import datetime
+
+from numpy.__config__ import show
 from database.db import DB
 from utils.weight_stats import estimate_1rm, moving_average
 
@@ -22,7 +24,7 @@ def get_common_exercises(user_id: int, html: bool = False):
     return worksets
 
 
-def make_workset_stats(user_id: int, exercise_name: str, exerise_id: int, period_days: int = 90):
+def make_workset_stats(user_id: int, exercise_name: str, exerise_id: int, period_days: int = 90, show_records: str = "True"):
     now_ts = int(datetime.datetime.now().timestamp())
     start_ts = now_ts - period_days * 86400
 
@@ -36,6 +38,18 @@ def make_workset_stats(user_id: int, exercise_name: str, exerise_id: int, period
         (user_id, exercise_name, start_ts)
     )
     worksets = db.cursor.fetchall()
+
+    # Получаем подходы по упражнению
+    db.cursor.execute(
+        """
+        SELECT weight, reps, date FROM records
+        WHERE user_id = ? AND exercise = ? AND date >= ?
+        ORDER BY date ASC
+        """,
+        (user_id, exercise_name, start_ts)
+    )    
+    records = db.cursor.fetchall()
+    
 
     stats_text = "Нет данных."
     if worksets:
@@ -59,7 +73,7 @@ def make_workset_stats(user_id: int, exercise_name: str, exerise_id: int, period
         )
 
     # График
-    def plot_worksets(worksets, exercise_name):
+    def plot_worksets(worksets, exercise_name, records, show_records):
         if not worksets:
             return None
 
@@ -67,9 +81,10 @@ def make_workset_stats(user_id: int, exercise_name: str, exerise_id: int, period
         weights = [w for w, _, _ in worksets]
         reps = [r for _, r, _ in worksets]
 
-        fig, ax1 = plt.subplots(figsize=(8, 3))
+        # Делаем график больше
+        fig, ax1 = plt.subplots(figsize=(9, 4))
 
-        ax1.set_title(f'{exercise_name} — вес и повторения')
+        ax1.set_title(f'{exercise_name} — вес, повторения и рекорд', pad=15)
         ax1.set_xlabel('')
 
         # Вес
@@ -77,32 +92,73 @@ def make_workset_stats(user_id: int, exercise_name: str, exerise_id: int, period
         ax1.plot(dates, weights, color='tab:blue', marker='o', label='Вес')
         ax1.tick_params(axis='y', labelcolor='tab:blue')
 
-        # Повторения (вторичная ось Y)
+        # Повторения
         ax2 = ax1.twinx()
         ax2.set_ylabel('Повторения', color='tab:orange')
         ax2.plot(dates, reps, color='tab:orange', marker='x', linestyle='--', label='Повторы')
         ax2.tick_params(axis='y', labelcolor='tab:orange')
 
-        fig.tight_layout()
-        plt.grid(True)
+        # Рекорды
+        if records and show_records == "True":
+            for w, r, d in records:
+                rec_date = datetime.datetime.fromtimestamp(d)
+
+                # Вертикальная красная линия
+                ax1.axvline(rec_date, color='tab:red', linestyle=':', alpha=0.7)
+
+                # Верх графика (чуть выше)
+                ymax = ax1.get_ylim()[1]
+
+                # Подпись рекорда сверху
+                ax1.text(
+                    rec_date, ymax, f'{w:.1f}',
+                    color='red', fontsize=10, fontweight='bold',
+                    ha='center', va='bottom',
+                    bbox=dict(facecolor='white', edgecolor='none', pad=0)
+                )
+
+        ax1.grid(True)
+
+        # Ручная настройка вместо tight_layout
+        fig.subplots_adjust(top=0.88, bottom=0.15, left=0.1, right=0.9)
 
         bio = BytesIO()
-        plt.savefig(bio, format='png')
+        fig.savefig(bio, format='png')
         bio.seek(0)
-        plt.close()
+        plt.close(fig)
         return bio
 
-    plot_img = plot_worksets(worksets[-200:], exercise_name) if worksets else None
+
+
+    plot_img = plot_worksets(worksets[-200:], exercise_name, records[-200:], show_records) if worksets else None
 
     # Кнопки смены периода
     def get_button_text(period, current):
         return f'• {period} дн •' if period == current else f'{period} дн'
+    def get_records_btn_text(show_record: str):
+        return "✅ Показывать рекорд" if show_record == "True" else "❌ Показывать рекорд"
+    def get_record_btn(records):
+        if records:
+            return [InlineKeyboardButton(
+                text=get_records_btn_text(show_records),
+                callback_data=f"workset_stats:{exerise_id}:{period_days}?{'False' if show_records == 'True' else 'True'}"
+            )]
+        return None
+
+
     kb = InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text=get_button_text(7, period_days), callback_data=f"workset_stats:{exerise_id}:7"),
-         InlineKeyboardButton(text=get_button_text(30, period_days), callback_data=f"workset_stats:{exerise_id}:30")],
-        [InlineKeyboardButton(text=get_button_text(90, period_days), callback_data=f"workset_stats:{exerise_id}:90"),
-         InlineKeyboardButton(text=get_button_text(365, period_days), callback_data=f"workset_stats:{exerise_id}:365")],
-        [InlineKeyboardButton(text="⬅️ К выбору упражнений", callback_data="menu:exercises_pages")]
+        [
+            InlineKeyboardButton(text=get_button_text(7, period_days), callback_data=f"workset_stats:{exerise_id}:7?{show_records}"),
+            InlineKeyboardButton(text=get_button_text(30, period_days), callback_data=f"workset_stats:{exerise_id}:30?{show_records}")
+        ],
+        [
+            InlineKeyboardButton(text=get_button_text(90, period_days), callback_data=f"workset_stats:{exerise_id}:90?{show_records}"),
+            InlineKeyboardButton(text=get_button_text(365, period_days), callback_data=f"workset_stats:{exerise_id}:365?{show_records}")
+        ],
+        *([get_record_btn(records)] if get_record_btn(records) else []),
+        [
+            InlineKeyboardButton(text="⬅️ К выбору упражнений", callback_data="menu:exercises_pages")
+        ]
     ])
 
     text = (

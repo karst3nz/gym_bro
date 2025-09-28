@@ -11,7 +11,7 @@ async def start(user_id: int, state: FSMContext):
         "Доступные команды:\n"
         "<b>/weight</b> — ввести текущий вес\n"
         "<b>/workset</b> — добавить рабочий подход\n"
-        # "<b>/record</b> — добавить рекорд\n"
+        "<b>/record</b> — добавить рекорд\n"
         "<b>/weight_stats</b> — посмотреть статистику по весу тела\n"
         "<b>/workset_stats</b> — посмотреть статистику по рабочим подходам\n"
     )
@@ -40,11 +40,11 @@ from utils.workset_stats import get_common_exercises
 async def workset(user_id: int, state: FSMContext):
     await state.clear()
     await state.set_state(States.workset)
-    exercises = get_common_exercises(user_id, html=True); exercises = '\n'.join(exercises)
     text = (
         "Введите рабочий подход в формате: <b>название, вес, повторения</b>\n"
         "Например: <b>Жим лёжа, 80, 10</b>"
     )
+    exercises = get_common_exercises(user_id, html=True); exercises = '\n'.join(exercises)
     if len(exercises) >= 1:
         text += (
         "\n\nНазвания ваших упражнений:\n"
@@ -65,6 +65,13 @@ async def record(user_id: int, state: FSMContext):
         "Введите рекорд в формате: <b>название, вес, повторения</b>\n"
         "Например: Присед, 120, 5"
     )
+    exercises = get_common_exercises(user_id, html=True); exercises = '\n'.join(exercises)
+    if len(exercises) >= 1:
+        text += (
+        "\n\nНазвания ваших упражнений:\n"
+        f"{exercises}\n"
+        "(Нажмите на название, чтобы скопировать)"
+        )
     btns = types.InlineKeyboardMarkup(
         inline_keyboard=[
             [types.InlineKeyboardButton(text="◀️ Назад", callback_data="menu:start")],

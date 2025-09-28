@@ -61,9 +61,11 @@ async def stats_period_cb(call: types.CallbackQuery, state: FSMContext):
         if exercise_id == key_value: 
             exercise = i
             break
-    try: period = int(call.data.split(":")[2]) 
+    try: period = int(call.data.split(":")[2].split("?")[0]) 
     except: period = 90
-    text, plot_img, kb = make_workset_stats(call.from_user.id, exercise, exercise_id, period)
+    try: show_records = str(call.data.split("?")[1])
+    except Exception as e: show_records = "True"
+    text, plot_img, kb = make_workset_stats(call.from_user.id, exercise, exercise_id, period, show_records)
     if plot_img:
         with tempfile.TemporaryDirectory() as temp_dir:
             temp_path = os.path.join(temp_dir, f"workset_{call.from_user.id}.png")

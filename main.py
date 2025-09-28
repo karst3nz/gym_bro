@@ -13,7 +13,7 @@ async def start_bot():
             types.BotCommand(command="/start", description="Главное меню"),
             types.BotCommand(command="/weight", description="Ввести текущий вес"),
             types.BotCommand(command="/workset", description="Добавить рабочий подход"),
-            # types.BotCommand(command="/record", description="Добавить рекорд"),
+            types.BotCommand(command="/record", description="Добавить рекорд"),
             types.BotCommand(command="/weight_stats", description="Посмотреть статистику по весу тела"),
             types.BotCommand(command="/workset_stats", description="Посмотреть статистику по рабочим подходам"),
         ])

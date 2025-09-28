@@ -32,10 +32,10 @@ async def cmd_weight(msg: types.Message, state: FSMContext):
     text, btns = await menus.weight(msg.from_user.id, state)
     await msg.answer(text, reply_markup=btns)
 
-# @dp.message(Command("record"))
-# async def cmd_record(msg: types.Message, state: FSMContext):
-#     text, btns = await menus.record(msg.from_user.id, state)
-#     await msg.answer(text, reply_markup=btns)
+@dp.message(Command("record"))
+async def cmd_record(msg: types.Message, state: FSMContext):
+    text, btns = await menus.record(msg.from_user.id, state)
+    await msg.answer(text, reply_markup=btns)
 
 @dp.message(Command("workset"))
 async def cmd_workset(msg: types.Message, state: FSMContext):
